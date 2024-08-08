@@ -1,0 +1,52 @@
+server {
+  listen 443 ssl http2;
+  #listen [::]:443 ssl http2;
+  server_name cdn.mitexleo.one;
+  root /var/www/html;
+    ssl_certificate /etc/letsencrypt/live/cdn.mitexleo.one/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/cdn.mitexleo.one/privkey.pem; # managed by Certbot
+
+  keepalive_timeout 30;
+
+  location = / {
+    index index.html;
+  }
+
+  location / {
+    try_files $uri @s3;
+							      
+  }  
+  set $s3_backend 'https://mitexleo.s3.eu-central-003.backblazeb2.com';
+
+  location @s3 {
+							          limit_except GET { 
+      deny all;
+								  }
+								resolver 1.1.1.1;
+  proxy_set_header Host mitexleo.s3.eu-central-003.backblazeb2.com;
+  proxy_set_header Connection '';
+  proxy_set_header Authorization '';
+  proxy_hide_header Set-Cookie;
+  proxy_hide_header 'Access-Control-Allow-Origin';
+  proxy_hide_header 'Access-Control-Allow-Methods';
+  proxy_hide_header 'Access-Control-Allow-Headers';
+  proxy_hide_header x-amz-id-2;
+  proxy_hide_header x-amz-request-id;
+  proxy_hide_header x-amz-meta-server-side-encryption;
+  proxy_hide_header x-amz-server-side-encryption;
+  proxy_hide_header x-amz-bucket-region;
+  proxy_hide_header x-amzn-requestid;
+  proxy_ignore_headers Set-Cookie;
+  proxy_pass $s3_backend$uri;
+  proxy_intercept_errors off;					proxy_cache CACHE;
+  proxy_cache_valid 200 48;
+  proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
+  proxy_cache_lock on;
+  expires 1y;						
+  add_header Cache-Control public;				add_header 'Access-Control-Allow-Origin' '*';
+  add_header X-Cache-Status $upstream_cache_status;
+  add_header X-Content-Type-Options nosniff;
+  add_header Content-Security-Policy "default-src 'none'; form-action 'none'";
+  }
+
+}
