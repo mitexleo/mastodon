@@ -6,7 +6,7 @@ server {
     ssl_certificate /etc/letsencrypt/live/cdn.mitexleo.one/fullchain.pem; # managed by Certbot
     ssl_certificate_key /etc/letsencrypt/live/cdn.mitexleo.one/privkey.pem; # managed by Certbot
 
-  keepalive_timeout 30;
+  keepalive_timeout 300;
 
   location = / {
     index index.html;
@@ -16,14 +16,14 @@ server {
     try_files $uri @s3;
 							      
   }  
-  set $s3_backend 'https://mitexleo.s3.eu-central-003.backblazeb2.com';
+  set $s3_backend 'https://leo911.se-sto-1.linodeobjects.com';
 
   location @s3 {
 							          limit_except GET { 
       deny all;
 								  }
-								resolver 1.1.1.1;
-  proxy_set_header Host mitexleo.s3.eu-central-003.backblazeb2.com;
+								resolver 9.9.9.9;
+							       	proxy_set_header Host se-sto-1.linodeobjects.com;
   proxy_set_header Connection '';
   proxy_set_header Authorization '';
   proxy_hide_header Set-Cookie;
@@ -37,7 +37,7 @@ server {
   proxy_hide_header x-amz-bucket-region;
   proxy_hide_header x-amzn-requestid;
   proxy_ignore_headers Set-Cookie;
-  proxy_pass $s3_backend$uri;
+  proxy_pass $s3_backend/leo911$uri;
   proxy_intercept_errors off;					proxy_cache CACHE;
   proxy_cache_valid 200 48;
   proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
