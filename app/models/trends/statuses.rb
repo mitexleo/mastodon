@@ -3,7 +3,7 @@
 class Trends::Statuses < Trends::Base
   PREFIX = 'trending_statuses'
 
-  BATCH_SIZE = 700
+  BATCH_SIZE = 100
 
   self.default_options = {
     threshold: 5,
